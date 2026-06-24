@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h5 class="text-info mb-4">📊 Statistics</h5>
+<div class="row g-4">
+  <div class="col-md-7">
+    <div class="card bg-dark border-secondary">
+      <div class="card-body">
+        <h6 class="card-title text-muted">Top 10 Source IPs</h6>
+        <canvas id="chartIPs"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card bg-dark border-secondary">
+      <div class="card-body">
+        <h6 class="card-title text-muted">Top 5 Usernames</h6>
+        <canvas id="chartUsers"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ipData = {{ stats.top_ips | tojson }};
+  const userData = {{ stats.top_users | tojson }};
+
+  new Chart(document.getElementById('chartIPs'), {
+    type: 'bar',
+    data: {
+      labels: ipData.map(d => d.ip),
+      datasets: [{ label: 'Attempts', data: ipData.map(d => d.count),
+        backgroundColor: '#f85149' }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: {
+      x: { ticks: { color: '#8b949e' } }, y: { ticks: { color: '#8b949e' } }
+    }}
+  });
+
+  new Chart(document.getElementById('chartUsers'), {
+    type: 'doughnut',
+    data: {
+      labels: userData.map(d => d.user),
+      datasets: [{ data: userData.map(d => d.count),
+        backgroundColor: ['#58a6ff','#f85149','#3fb950','#d29922','#bc8cff'] }]
+    },
+    options: { plugins: { legend: { labels: { color: '#e0e0e0' } } } }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,205 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+  #response-box {
+    color: #fafafa;
+    overflow-y: auto;
+    max-height: 500px;
+    min-height: 300px;
+    line-height: 1.7;
+    padding: 10px;
+  }
+
+  #response-box pre {
+    background: #111827;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    color: #e5e7eb;
+  }
+
+  #response-box code {
+    color: #38bdf8;
+    background: #1e293b;
+    padding: 2px 5px;
+    border-radius: 4px;
+  }
+
+  #response-box table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+
+  #response-box th,
+  #response-box td {
+    border: 1px solid #374151;
+    padding: 10px;
+    text-align: left;
+  }
+
+  #response-box th {
+    background: #1f2937;
+    color: #38bdf8;
+  }
+
+  #response-box tr:nth-child(even) {
+    background: #111827;
+  }
+
+  #response-box ul,
+  #response-box ol {
+    padding-left: 20px;
+  }
+
+  #response-box h1,
+  #response-box h2,
+  #response-box h3,
+  #response-box h4 {
+    color: #38bdf8;
+    margin-top: 15px;
+  }
+
+  #response-box blockquote {
+    border-left: 4px solid #38bdf8;
+    padding-left: 12px;
+    color: #cbd5e1;
+    margin: 15px 0;
+  }
+
+  #question {
+    background: #111827 !important;
+    color: #f8fafc !important;
+  }
+
+  #question::placeholder {
+    color: #94a3b8;
+  }
+</style>
+
+<h5 class="text-info mb-4">🤖 Ask AI — RAG Assistant</h5>
+
+<div class="card bg-dark border-secondary mb-3">
+  <div class="card-body" id="response-box">
+    <span class="text-muted">
+      Ask a question about your alerts...
+    </span>
+  </div>
+</div>
+
+<div class="input-group">
+  <input
+    type="text"
+    id="question"
+    class="form-control border-secondary"
+    placeholder="e.g. Which IP is the most dangerous?"
+    onkeypress="handleKeyPress(event)"
+  >
+
+  <button class="btn btn-info" onclick="sendQuestion()">
+    Send
+  </button>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<!-- Markdown parser -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Optional syntax highlighting -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<script>
+async function sendQuestion() {
+  const input = document.getElementById('question');
+  const q = input.value.trim();
+
+  if (!q) return;
+
+  const box = document.getElementById('response-box');
+
+  // Show loading message
+  box.innerHTML = `
+    <div class="text-info">
+      <span class="spinner-border spinner-border-sm"></span>
+      Thinking...
+    </div>
+  `;
+
+  // Clear input
+  input.value = '';
+
+  try {
+    const res = await fetch('/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        question: q
+      })
+    });
+
+    if (!res.ok) {
+      box.innerHTML = `
+        <div class="text-danger">
+          Error: ${res.status} ${res.statusText}
+        </div>
+      `;
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      // Append streamed text
+      fullText += decoder.decode(value, { stream: true });
+
+      // Convert markdown to HTML
+      box.innerHTML = marked.parse(fullText);
+
+      // Syntax highlighting
+      document.querySelectorAll('pre code').forEach((el) => {
+        hljs.highlightElement(el);
+      });
+
+      // Auto scroll
+      box.scrollTop = box.scrollHeight;
+    }
+
+  } catch (err) {
+    console.error(err);
+
+    box.innerHTML = `
+      <div class="text-danger">
+        Failed to contact AI backend.
+      </div>
+    `;
+  }
+}
+
+// Press Enter to send
+function handleKeyPress(event) {
+  if (event.key === 'Enter') {
+    sendQuestion();
+  }
+}
+</script>
+
+{% endblock %}
+

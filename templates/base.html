@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel-IAM</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { display: flex; min-height: 100vh; background: #0f1117; color: #e0e0e0; }
+    .sidebar {
+      width: 220px; background: #161b22; padding: 1.5rem 1rem;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      border-right: 1px solid #30363d; flex-shrink: 0;
+    }
+    .sidebar h4 { color: #58a6ff; font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+    .sidebar a {
+      color: #8b949e; text-decoration: none; padding: 0.5rem 0.75rem;
+      border-radius: 6px; font-size: 0.9rem;
+    }
+    .sidebar a:hover, .sidebar a.active { background: #21262d; color: #e0e0e0; }
+    .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h4>🛡️ Sentinel-IAM</h4>
+    <a href="/live" class="{{ 'active' if request.path == '/live' }}">🔴 Live Alerts</a>
+    <a href="/stats" class="{{ 'active' if request.path == '/stats' }}">📊 Statistics</a>
+    <a href="/ask" class="{{ 'active' if request.path == '/ask' }}">🤖 Ask AI</a>
+  </div>
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
